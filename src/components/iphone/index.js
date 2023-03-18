@@ -4,143 +4,109 @@ import style_iphone from '../button/style_iphone';
 import $ from 'jquery';
 import Button from '../button';
 
-class Iphone extends Component {
+export default class WeatherApp extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      locate: '',
-      temp: '',
-      cond: '',
+      location: '',
       display: true,
+      weather: null,
       airQuality: null,
-      error: null
+      pollen: null
     };
   }
 
+  handleLocationChange = (event) => {
+    this.setState({ location: event.target.value });
+  };
+
   fetchWeatherData = () => {
-    const weatherApiUrl = 'http://api.openweathermap.org/data/2.5/weather?q=London&units=metric&APPID=f790ee04115c5a19a219111693630060';
+    const { location } = this.state;
+
+    const weatherUrl = `http://api.openweathermap.org/data/2.5/weather?q=${location}&units=metric&APPID=f790ee04115c5a19a219111693630060`;
     $.ajax({
-      url: weatherApiUrl,
+      url: weatherUrl,
       dataType: 'jsonp',
-      success: this.parseWeatherResponse,
-      error: (req, err) => console.log('Weather API call failed: ' + err)
-    });
-  }
-
-  fetchAirQualityData = () => {
-    const ambeeApiUrl = 'https://api.ambeedata.com/latest/by-lat-lng?lat=51&lng=0';
-    const pollenApiUrl = 'https://api.ambeedata.com/latest/pollen/by-lat-lng?lat=51&lng=0';
-    const ambeeApiKey = 'e398f233ae0f3fffbe9b518286c45bcf3969cdb89ad04abeb92c44290b11a976';
-    
-    console.log('Fetching air quality data...');
-    fetch(ambeeApiUrl, {
-      headers: {
-        'x-api-key': ambeeApiKey
+      success: (response) => {
+        this.setState({ weather: response });
+        this.fetchAirQualityAndPollenData(response.coord.lat, response.coord.lon);
+      },
+      error: (req, err) => {
+        console.log(`Weather API call failed: ${err}`);
       }
-    })
-      .then(response => response.json())
-      .then(data => {
-        console.log('Air quality data fetched successfully:', data);
-        this.setState({ airQuality: data });
-        return fetch(pollenApiUrl, {
-          headers: {
-            'x-api-key': ambeeApiKey
-          }
-        });
-      })
-      .then(response => response.json())
-      .then(data => {
-        console.log('Pollen count data fetched successfully:', data);
-        this.setState({ pollenCount: data });
-      })
-      .catch(error => {
-        console.log('Error fetching air quality and pollen count data:', error);
-        this.setState({ error });
-      });
-  }
+    });
 
-  componentDidMount() {
-    console.log('Component mounted, fetching air quality data...');
-    this.fetchAirQualityData();
-  }
+    this.setState({ display: false });
+  };
 
-render() {
-  const tempStyles = this.state.temp ? `${style.temperature} ${style.filled}` : style.temperature;
+  fetchAirQualityAndPollenData = (lat, lon) => {
+    const ambeeApiUrl = `https://api.ambeedata.com/latest/by-lat-lng?lat=${lat}&lng=${lon}`;
+    const pollenApiUrl = `https://api.ambeedata.com/latest/pollen/by-lat-lng?lat=${lat}&lng=${lon}`;
+    const ambeeApiKey = 'e398f233ae0f3fffbe9b518286c45bcf3969cdb89ad04abeb92c44290b11a976';
 
-  return (
-    <div class={style.container}>
-      <div class={style.header}>
-        <div class={style.city}>{this.state.locate}</div>
-        <div class={style.conditions}>{this.state.cond}</div>
-        <span class={tempStyles}>{this.state.temp}</span>
-      </div>
-      <div class={style.details}>
-        {this.state.displayAirQualityData && this.renderAirQualityData()}
-      </div>
-      <div class={style_iphone.container}>
-        {this.state.display ? <Button class={style_iphone.button} clickFunction={this.fetchWeatherData} /> : null}
-        {!this.state.display && !this.state.displayAirQualityData && (
-          <Button class={style_iphone.button} clickFunction={this.showAirQualityData} label="Show Air Quality Data" />
+    $.ajax({
+      url: ambeeApiUrl,
+      headers: { 'x-api-key': ambeeApiKey },
+      success: (response) => {
+        this.setState({ airQuality: response });
+      },
+      error: (req, err) => {
+        console.log(`Air quality API call failed: ${err}`);
+      }
+    });
+
+    $.ajax({
+      url: pollenApiUrl,
+      headers: { 'x-api-key': ambeeApiKey },
+      success: (response) => {
+        this.setState({ pollen: response });
+      },
+      error: (req, err) => {
+        console.log(`Pollen API call failed: ${err}`);
+      }
+    });
+  };
+
+  render() {
+    const { display, weather, airQuality, pollen } = this.state;
+
+    return (
+      <div class={style.container}>
+        {display && (
+          <div class={style.inputContainer}>
+            <input
+              class={style.locationInput}
+              type="text"
+              placeholder="Enter location"
+              value={this.state.location}
+              onChange={this.handleLocationChange}
+            />
+            <Button class={style.submitButton} style={style_iphone} clickFunction={this.fetchWeatherData} />
+          </div>
         )}
-      </div>
-    </div>
-  );
-}
-
-showAirQualityData = () => {
-  this.setState({ displayAirQualityData: true });
-}
-
-renderAirQualityData = () => {
-  let airQualityData;
-  if (this.state.error) {
-    airQualityData = <div>Error: {this.state.error.message}</div>;
-  } else if (!this.state.airQuality || !this.state.pollenCount) {
-    airQualityData = <div>Loading...</div>;
-  } else {
-    const aqiCategory = this.state.airQuality.stations[0].aqiInfo.category;
-    const aqiValue = this.state.airQuality.stations[0].aqiInfo.concentration;
-    const grassPollenRisk = this.state.pollenCount.data[0].Risk.grass_pollen;
-    const treePollenRisk = this.state.pollenCount.data[0].Risk.tree_pollen;
-    const weedPollenRisk = this.state.pollenCount.data[0].Risk.weed_pollen;
-    airQualityData = (
-      <div>
-        <h2>Air Quality Data:</h2>
-        <p>Category: {aqiCategory}</p>
-        <p>AQI: {aqiValue}</p>
-        <h2>Pollen Count Data:</h2>
-        <p>Grass Pollen Risk: {grassPollenRisk}</p>
-        <p>Tree Pollen Risk: {treePollenRisk}</p>
-        <p>Weed Pollen Risk: {weedPollenRisk}</p>
+        {weather && (
+          <div class={style.weatherInfo}>
+            <div class={style.city}>{weather.name}</div>
+            <div class={style.temperature}>{weather.main.temp}°C</div>
+            <div class={style.conditions}>{weather.weather[0].description}</div>
+          </div>
+        )}
+        {airQuality && (
+          <div class={style.airQualityInfo}>
+            <div class={style.infoTitle}>Air Quality Data:</div>
+            <div class={style.infoSubtitle}>Category: {airQuality.stations[0].aqiInfo.category}</div>
+            <div>AQI: {airQuality.stations[0].aqiInfo.concentration}</div>
+          </div>
+        )}
+        {pollen && (
+          <div class={style.pollenInfo}>
+            <div class={style.infoTitle}>Pollen Count Data:</div>
+            <div class={style.infoSubtitle}>Tree Risk Level: {pollen.data[0].Risk.tree_pollen}</div>
+            <div class={style.infoSubtitle}>Grass Risk Level: {pollen.data[0].Risk.grass_pollen}</div>
+            <div class={style.infoSubtitle}>Weed Risk Level: {pollen.data[0].Risk.weed_pollen}</div>
+          </div>
+        )}
       </div>
     );
   }
-  return (
-    <div>
-      <Button class={style_iphone.button} clickFunction={this.hideAirQualityData} label="Hide Air Quality Data" />
-      {airQualityData}
-    </div>
-  );
 }
-
-hideAirQualityData = () => {
-  this.setState({ displayAirQualityData: false });
-}
-  
-
-
-  parseWeatherResponse = (parsed_json) => {
-    const location = parsed_json.name;
-    const temp_c = parsed_json.main.temp;
-    const conditions = parsed_json.weather[0].description;
-
-    this.setState({
-      locate: location,
-      temp: temp_c,
-      cond: conditions,
-      display: false
-    });
-  }
-}
-
-export default Iphone;
