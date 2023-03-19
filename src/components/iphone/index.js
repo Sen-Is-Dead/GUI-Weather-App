@@ -3,6 +3,13 @@ import style from './style';
 import style_iphone from '../button/style_iphone';
 import $ from 'jquery';
 import Button from '../button';
+import clear from '../../assets/backgrounds/clear-iphone.jpg'
+import clouds from '../../assets/backgrounds/clouds-iphone.jpg'
+import rain from '../../assets/backgrounds/rain-iphone.jpg'
+import snow from '../../assets/backgrounds/snow-iphone.jpg'
+import thunderstorm from '../../assets/backgrounds/thunderstorm-iphone.jpg'
+import mist from '../../assets/backgrounds/mist-iphone.jpg'
+
 
 export default class WeatherApp extends Component {
   constructor(props) {
@@ -67,13 +74,53 @@ export default class WeatherApp extends Component {
     });
   };
 
+  getBackgroundImage = (weather) => {
+    if (!weather) {
+      return clouds; // Default background image
+    }
+  
+    const condition = weather.weather[0].main.toLowerCase();
+    let backgroundImage;
+  
+    switch (condition) {
+      case 'clear':
+        backgroundImage = clear;
+        break;
+      case 'clouds':
+        backgroundImage = clouds;
+        break;
+      case 'rain':
+      case 'drizzle':
+        backgroundImage = rain;
+        break;
+      case 'snow':
+        backgroundImage = snow;
+        break;
+      case 'thunderstorm':
+        backgroundImage = thunderstorm;
+        break;
+      case 'mist':
+      case 'haze':
+      case 'smoke':
+      case 'fog':
+      case 'dust':
+        backgroundImage = mist;
+        break;
+      default:
+        backgroundImage = clouds;
+    }
+  
+    console.log('Background image URL:', backgroundImage);
+    return backgroundImage;
+  };
+
   render() {
     const { display, weather, airQuality, pollen } = this.state;
 
     return (
-      <div class={style.container}>
+      <div class={style.container} style={{ backgroundImage: `url(${this.getBackgroundImage(weather)})` }}>
         {display && (
-          <div class={style.inputContainer}>
+          <div>
             <input
               class={style.locationInput}
               type="text"
@@ -81,7 +128,7 @@ export default class WeatherApp extends Component {
               value={this.state.location}
               onChange={this.handleLocationChange}
             />
-            <Button class={style.submitButton} style={style_iphone} clickFunction={this.fetchWeatherData} />
+            <Button class={style.submitButton} clickFunction={this.fetchWeatherData} />
           </div>
         )}
         {weather && (
@@ -95,7 +142,7 @@ export default class WeatherApp extends Component {
           <div class={style.airQualityInfo}>
             <div class={style.infoTitle}>Air Quality Data:</div>
             <div class={style.infoSubtitle}>Category: {airQuality.stations[0].aqiInfo.category}</div>
-            <div>AQI: {airQuality.stations[0].aqiInfo.concentration}</div>
+            <div class={style.infoSubtitle}>AQI: {airQuality.stations[0].aqiInfo.concentration.toFixed(1)}</div>
           </div>
         )}
         {pollen && (
