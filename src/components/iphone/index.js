@@ -1,6 +1,5 @@
 import { h, render, Component } from 'preact';
 import style from './style';
-import style_iphone from '../button/style_iphone';
 import $ from 'jquery';
 import Button from '../button';
 import clear from '../../assets/backgrounds/clear-iphone.jpg'
@@ -19,7 +18,8 @@ export default class WeatherApp extends Component {
       display: true,
       weather: null,
       airQuality: null,
-      pollen: null
+      pollen: null,
+      forecast: null
     };
   }
 
@@ -42,8 +42,24 @@ export default class WeatherApp extends Component {
         console.log(`Weather API call failed: ${err}`);
       }
     });
-
+    this.fetchWeatherForecastData();
     this.setState({ display: false });
+  };
+
+  fetchWeatherForecastData = () => {
+    const { location } = this.state;
+
+    const forecastUrl = `http://api.openweathermap.org/data/2.5/forecast/daily?q=${location}&cnt=1&units=metric&appid=f790ee04115c5a19a219111693630060`;
+    $.ajax({
+      url: forecastUrl,
+      dataType: 'jsonp',
+      success: (response) => {
+        this.setState({ forecast: response.list[0] });
+      },
+      error: (req, err) => {
+        console.log(`Forecast API call failed: ${err}`);
+      }
+    });
   };
 
   fetchAirQualityAndPollenData = (lat, lon) => {
@@ -109,13 +125,11 @@ export default class WeatherApp extends Component {
       default:
         backgroundImage = clouds;
     }
-  
-    console.log('Background image URL:', backgroundImage);
     return backgroundImage;
   };
 
   render() {
-    const { display, weather, airQuality, pollen } = this.state;
+    const { display, weather, airQuality, pollen, forecast } = this.state;
 
     return (
       <div class={style.container} style={{ backgroundImage: `url(${this.getBackgroundImage(weather)})` }}>
@@ -132,12 +146,17 @@ export default class WeatherApp extends Component {
           </div>
         )}
         {weather && (
-          <div class={style.weatherInfo}>
-            <div class={style.city}>{weather.name}</div>
-            <div class={style.temperature}>{weather.main.temp}°C</div>
-            <div class={style.conditions}>{weather.weather[0].description}</div>
+      <div class={style.weatherInfo}>
+        <div class={style.city}>{weather.name}</div>
+        <div class={style.temperature}>{weather.main.temp}°C</div>
+        {forecast && (
+          <div class={style.highLow}>
+            High: {forecast.temp.max.toFixed(1)} Low: {forecast.temp.min.toFixed(1)}
           </div>
         )}
+        <div class={style.conditions}>{weather.weather[0].description}</div>
+      </div>
+    )}
         {airQuality && (
           <div class={style.airQualityInfo}>
             <div class={style.infoTitle}>Air Quality Data:</div>
