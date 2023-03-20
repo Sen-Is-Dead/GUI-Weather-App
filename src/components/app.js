@@ -30,13 +30,6 @@ export default class App extends Component {
 		return (
 		  <div id="app">
 			<Iphone onWeatherData={this.handleWeatherData} />
-			{this.state.weatherData && (
-			  <div class="weather-data">
-				<h2>{this.state.weatherData.location}</h2>
-				<p>Temperature: {this.state.weatherData.temperature}</p>
-				<p>Conditions: {this.state.weatherData.conditions}</p>
-			  </div>
-			)}
 		  </div>
 		);
 	  }
