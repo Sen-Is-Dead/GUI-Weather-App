@@ -69,6 +69,10 @@ padding-top: 10px;
 vertical-align: top;
 }
 
+.submitButton {
+    position: relative;
+}
+
 .inputContainer {
 display: flex;
 flex-direction: column;
@@ -89,26 +93,10 @@ width: 60%;
 margin-bottom: 10px;
 }
 
-.submitButton {
-font-size: 1em;
-padding: 8px 12px;
-border: none;
-background-color: #4CAF50;
-color: #fff;
-cursor: pointer;
-border-radius: 4px;
-box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-transition: all 0.3s;
-}
-
-.submitButton:hover {
-background-color: #3e8e41;
-box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-}
-
 .weatherInfo,
 .airQualityInfo,
-.pollenInfo {
+.pollenInfo,
+.hourlyForecast {
 margin-bottom: 20px;
 text-align: left;
 padding: 0 20px;
@@ -126,3 +114,35 @@ font-size: 1.1em;
 margin-bottom: 5px;
 text-shadow: 1px 1px #000;
 }
+
+.search {
+    transition: width 0.5s, border-radius 0.5s;
+    width: 40px;
+    height: 40px;
+    border-radius: 20px;
+    border: none;
+    cursor: pointer;
+    &:hover {
+      background: rgba(253, 246, 246, 0.871);
+      box-shadow: 0 0 0 3px rgb(41, 67, 95);
+    }
+    &:focus {
+      outline: none;
+      box-shadow: none;
+      padding-left: 15px;
+      cursor: text;
+      width: 300px;
+      background: rgb(255, 255, 255);
+    }
+    &:not(:focus) {    
+        text-indent:-5000px;    
+    }
+}
+  
+.searchIcon {
+    position: relative;
+    width: 40px;
+    left: -40px;
+    top: 15px;
+    cursor: pointer;
+  }
