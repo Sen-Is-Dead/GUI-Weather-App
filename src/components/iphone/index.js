@@ -1,6 +1,7 @@
 import { h, render, Component } from 'preact';
 import style from './style';
-import $ from 'jquery';
+import style_iphone from '../button/style_iphone';
+import $, { event } from 'jquery';
 import Button from '../button';
 import clear from '../../assets/backgrounds/clear-iphone.jpg'
 import clouds from '../../assets/backgrounds/clouds-iphone.jpg'
@@ -19,18 +20,25 @@ export default class WeatherApp extends Component {
       weather: null,
       airQuality: null,
       pollen: null,
-      forecast: null
+      hourlyForecast: null
     };
   }
 
   handleLocationChange = (event) => {
-    this.setState({ location: event.target.value });
-  };
+    if (event.key === 'Enter') {
+      this.setState({ location: event.target.value });
+      this.fetchWeatherData();
+      this.fetchAirQualityAndPollenData();
+      this.setState({ location: '' });
+      }
+    }
 
   fetchWeatherData = () => {
     const { location } = this.state;
-
+  
     const weatherUrl = `http://api.openweathermap.org/data/2.5/weather?q=${location}&units=metric&APPID=f790ee04115c5a19a219111693630060`;
+    const hourlyForecastUrl = `http://api.openweathermap.org/data/2.5/forecast?q=${location}&units=metric&APPID=f790ee04115c5a19a219111693630060`;
+  
     $.ajax({
       url: weatherUrl,
       dataType: 'jsonp',
@@ -42,25 +50,18 @@ export default class WeatherApp extends Component {
         console.log(`Weather API call failed: ${err}`);
       }
     });
-    this.fetchWeatherForecastData();
-    this.setState({ display: false });
-  };
-
-  fetchWeatherForecastData = () => {
-    const { location } = this.state;
-
-    const forecastUrl = `http://api.openweathermap.org/data/2.5/forecast/daily?q=${location}&cnt=1&units=metric&appid=f790ee04115c5a19a219111693630060`;
+  
     $.ajax({
-      url: forecastUrl,
+      url: hourlyForecastUrl,
       dataType: 'jsonp',
       success: (response) => {
-        this.setState({ forecast: response.list[0] });
+        this.setState({ hourlyForecast: response });
       },
       error: (req, err) => {
-        console.log(`Forecast API call failed: ${err}`);
+        console.log(`Hourly forecast API call failed: ${err}`);
       }
     });
-  };
+  }  
 
   fetchAirQualityAndPollenData = (lat, lon) => {
     const ambeeApiUrl = `https://api.ambeedata.com/latest/by-lat-lng?lat=${lat}&lng=${lon}`;
@@ -75,6 +76,7 @@ export default class WeatherApp extends Component {
       },
       error: (req, err) => {
         console.log(`Air quality API call failed: ${err}`);
+        this.setState({ airQuality: false });
       }
     });
 
@@ -86,6 +88,7 @@ export default class WeatherApp extends Component {
       },
       error: (req, err) => {
         console.log(`Pollen API call failed: ${err}`);
+        this.setState({ pollen: false });
       }
     });
   };
@@ -125,38 +128,37 @@ export default class WeatherApp extends Component {
       default:
         backgroundImage = clouds;
     }
+  
+    console.log('Background image URL:', backgroundImage);
     return backgroundImage;
   };
 
   render() {
-    const { display, weather, airQuality, pollen, forecast } = this.state;
+    const { display, weather, airQuality, pollen, hourlyForecast } = this.state;
 
     return (
       <div class={style.container} style={{ backgroundImage: `url(${this.getBackgroundImage(weather)})` }}>
         {display && (
           <div>
-            <input
-              class={style.locationInput}
+              <input
+              id="search-box"
+              class={style.search}
               type="text"
               placeholder="Enter location"
               value={this.state.location}
               onChange={this.handleLocationChange}
-            />
-            <Button class={style.submitButton} clickFunction={this.fetchWeatherData} />
+              onKeyPress={this.handleLocationChange}
+              />
+              <label for="search-box"><img src="../../assets/icons/search.png" class={style.searchIcon}/></label>
           </div>
         )}
         {weather && (
-      <div class={style.weatherInfo}>
-        <div class={style.city}>{weather.name}</div>
-        <div class={style.temperature}>{weather.main.temp}°C</div>
-        {forecast && (
-          <div class={style.highLow}>
-            High: {forecast.temp.max.toFixed(1)} Low: {forecast.temp.min.toFixed(1)}
+          <div class={style.weatherInfo}>
+            <div class={style.city}>{weather.name}, {weather.sys.country}</div>
+            <div class={style.temperature}>{weather.main.temp}°C</div>
+            <div class={style.conditions}>{weather.weather[0].description}</div>
           </div>
         )}
-        <div class={style.conditions}>{weather.weather[0].description}</div>
-      </div>
-    )}
         {airQuality && (
           <div class={style.airQualityInfo}>
             <div class={style.infoTitle}>Air Quality Data:</div>
@@ -170,6 +172,20 @@ export default class WeatherApp extends Component {
             <div class={style.infoSubtitle}>Tree Risk Level: {pollen.data[0].Risk.tree_pollen}</div>
             <div class={style.infoSubtitle}>Grass Risk Level: {pollen.data[0].Risk.grass_pollen}</div>
             <div class={style.infoSubtitle}>Weed Risk Level: {pollen.data[0].Risk.weed_pollen}</div>
+          </div>
+        )}
+        {hourlyForecast && (
+          <div class={style.hourlyForecast}>
+            <div class={style.forecastTitle}>Hourly Forecast:</div>
+            <div class={style.forecastItems}>
+              {hourlyForecast.list.slice(12).map((item, index) => (
+                <div class={style.forecastItem} key={index}>
+                  <div>{new Date(item.dt * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
+                  <img src={`http://openweathermap.org/img/wn/${item.weather[0].icon}.png`}/>
+                  <div>{item.main.temp}°C</div>
+                </div>
+              ))}
+            </div>
           </div>
         )}
       </div>
