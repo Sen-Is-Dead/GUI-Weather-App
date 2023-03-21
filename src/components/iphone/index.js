@@ -1,4 +1,4 @@
-import { h, render, Component } from 'preact';
+import { h, render, Component} from 'preact';
 import style from './style';
 import style_iphone from '../button/style_iphone';
 import $, { event } from 'jquery';
@@ -20,48 +20,54 @@ export default class WeatherApp extends Component {
       weather: null,
       airQuality: null,
       pollen: null,
-      hourlyForecast: null
+      hourlyForecast: null,
+      searched: false,
     };
   }
-
   handleLocationChange = (event) => {
     if (event.key === 'Enter') {
-      this.setState({ location: event.target.value });
-      this.fetchWeatherData();
-      this.fetchAirQualityAndPollenData();
-      this.setState({ location: '' });
-      }
+      this.setState({ location: event.target.value});
+      this.fetchWeatherData(event.target.value)
+        .then((response) => {
+          if (response) {
+            const { lat, lon } = response.coord;
+            this.fetchAirQualityAndPollenData(lat, lon);
+          }
+        });
+      this.setState({ location: '', searched: true});
     }
+  };
 
-  fetchWeatherData = () => {
-    const { location } = this.state;
-  
-    const weatherUrl = `http://api.openweathermap.org/data/2.5/weather?q=${location}&units=metric&APPID=f790ee04115c5a19a219111693630060`;
-    const hourlyForecastUrl = `http://api.openweathermap.org/data/2.5/forecast?q=${location}&units=metric&APPID=f790ee04115c5a19a219111693630060`;
-  
-    $.ajax({
-      url: weatherUrl,
-      dataType: 'jsonp',
-      success: (response) => {
-        this.setState({ weather: response });
-        this.fetchAirQualityAndPollenData(response.coord.lat, response.coord.lon);
-      },
-      error: (req, err) => {
-        console.log(`Weather API call failed: ${err}`);
-      }
+  fetchWeatherData = (location) => {
+    return new Promise((resolve, reject) => {
+      const weatherUrl = `http://api.openweathermap.org/data/2.5/weather?q=${location}&units=metric&APPID=f790ee04115c5a19a219111693630060`;
+      const hourlyForecastUrl = `http://api.openweathermap.org/data/2.5/forecast?q=${location}&units=metric&APPID=f790ee04115c5a19a219111693630060`;
+
+      $.ajax({
+        url: weatherUrl,
+        dataType: 'jsonp',
+        success: (response) => {
+          this.setState({ weather: response});
+          resolve(response);
+        },
+        error: (req, err) => {
+          console.log(`Weather API call failed: ${err}`);
+          reject(err);
+        }
+      });
+
+      $.ajax({
+        url: hourlyForecastUrl,
+        dataType: 'jsonp',
+        success: (response) => {
+          this.setState({ hourlyForecast: response });
+        },
+        error: (req, err) => {
+          console.log(`Hourly forecast API call failed: ${err}`);
+        }
+      });
     });
-  
-    $.ajax({
-      url: hourlyForecastUrl,
-      dataType: 'jsonp',
-      success: (response) => {
-        this.setState({ hourlyForecast: response });
-      },
-      error: (req, err) => {
-        console.log(`Hourly forecast API call failed: ${err}`);
-      }
-    });
-  }  
+  };
 
   fetchAirQualityAndPollenData = (lat, lon) => {
     const ambeeApiUrl = `https://api.ambeedata.com/latest/by-lat-lng?lat=${lat}&lng=${lon}`;
@@ -72,11 +78,11 @@ export default class WeatherApp extends Component {
       url: ambeeApiUrl,
       headers: { 'x-api-key': ambeeApiKey },
       success: (response) => {
-        this.setState({ airQuality: response });
+        this.setState({ airQuality: response});
       },
       error: (req, err) => {
         console.log(`Air quality API call failed: ${err}`);
-        this.setState({ airQuality: false });
+        this.setState({ airQuality: false});
       }
     });
 
@@ -97,10 +103,10 @@ export default class WeatherApp extends Component {
     if (!weather) {
       return clouds; // Default background image
     }
-  
+
     const condition = weather.weather[0].main.toLowerCase();
     let backgroundImage;
-  
+
     switch (condition) {
       case 'clear':
         backgroundImage = clear;
@@ -128,19 +134,17 @@ export default class WeatherApp extends Component {
       default:
         backgroundImage = clouds;
     }
-  
-    console.log('Background image URL:', backgroundImage);
     return backgroundImage;
   };
 
   render() {
     const { display, weather, airQuality, pollen, hourlyForecast } = this.state;
-
+  
     return (
       <div class={style.container} style={{ backgroundImage: `url(${this.getBackgroundImage(weather)})` }}>
         {display && (
-          <div>
-              <input
+          <div class={style.searchWrapper}>
+            <input
               id="search-box"
               class={style.search}
               type="text"
@@ -148,46 +152,51 @@ export default class WeatherApp extends Component {
               value={this.state.location}
               onChange={this.handleLocationChange}
               onKeyPress={this.handleLocationChange}
-              />
-              <label for="search-box"><img src="../../assets/icons/search.png" class={style.searchIcon}/></label>
+            />
+            <label for="search-box"><img src="../../assets/icons/search.png" class={style.searchIcon} /></label>
           </div>
         )}
         {weather && (
           <div class={style.weatherInfo}>
-            <div class={style.city}>{weather.name}, {weather.sys.country}</div>
+            <div class={style.city}>{`${weather.name}, ${weather.sys.country}`}</div>
             <div class={style.temperature}>{weather.main.temp}°C</div>
-            <div class={style.conditions}>{weather.weather[0].description}</div>
+            <div class={style.conditions}>{weather.weather[0].description.charAt(0).toUpperCase() + weather.weather[0].description.slice(1)}</div>
           </div>
         )}
-        {airQuality && (
+        {this.state.searched && (
           <div class={style.airQualityInfo}>
-            <div class={style.infoTitle}>Air Quality Data:</div>
-            <div class={style.infoSubtitle}>Category: {airQuality.stations[0].aqiInfo.category}</div>
-            <div class={style.infoSubtitle}>AQI: {airQuality.stations[0].aqiInfo.concentration.toFixed(1)}</div>
-          </div>
+          <div class={style.infoTitle}>Air Quality Data:</div>
+          <div class={style.infoSubtitle}>Category: {airQuality !== null ? (airQuality.stations && airQuality.stations[0] ? airQuality.stations[0].aqiInfo.category : 'N/A') : 'N/A'}</div>
+          <div class={style.infoSubtitle}>AQI: {airQuality !== null ? (airQuality.stations && airQuality.stations[0] ? airQuality.stations[0].aqiInfo.concentration.toFixed(1) : 'N/A') : 'N/A'}</div>
+        </div>
         )}
-        {pollen && (
+        {this.state.searched && (
           <div class={style.pollenInfo}>
-            <div class={style.infoTitle}>Pollen Count Data:</div>
-            <div class={style.infoSubtitle}>Tree Risk Level: {pollen.data[0].Risk.tree_pollen}</div>
-            <div class={style.infoSubtitle}>Grass Risk Level: {pollen.data[0].Risk.grass_pollen}</div>
-            <div class={style.infoSubtitle}>Weed Risk Level: {pollen.data[0].Risk.weed_pollen}</div>
-          </div>
+          <div class={style.infoTitle}>Pollen Count Data:</div>
+          <div class={style.infoSubtitle}>Tree Risk Level: {pollen !== null ? (pollen && pollen.data && pollen.data[0] ? pollen.data[0].Risk.tree_pollen : 'N/A') : 'N/A'}</div>
+          <div class={style.infoSubtitle}>Grass Risk Level: {pollen !== null ? (pollen && pollen.data && pollen.data[0] ? pollen.data[0].Risk.grass_pollen : 'N/A') : 'N/A'}</div>
+          <div class={style.infoSubtitle}>Weed Risk Level: {pollen !== null ? (pollen && pollen.data && pollen.data[0] ? pollen.data[0].Risk.weed_pollen : 'N/A') : 'N/A'}</div>
+        </div>
         )}
-        {hourlyForecast && (
-          <div class={style.hourlyForecast}>
-            <div class={style.forecastTitle}>Hourly Forecast:</div>
-            <div class={style.forecastItems}>
-              {hourlyForecast.list.slice(12).map((item, index) => (
-                <div class={style.forecastItem} key={index}>
-                  <div>{new Date(item.dt * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
-                  <img src={`http://openweathermap.org/img/wn/${item.weather[0].icon}.png`}/>
-                  <div>{item.main.temp}°C</div>
-                </div>
-              ))}
+        {
+          hourlyForecast && (
+            <div class={style.hourlyForecast}>
+              <div class={style.forecastItems}>
+                {
+                  hourlyForecast.list.slice(12).map((item, index) => (
+                    <div class={style.forecastItem} key={index}>
+                      <div>
+                        {new Date(item.dt * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </div>
+                      <img src={`http://openweathermap.org/img/wn/${item.weather[0].icon}.png`} />
+                      <div>{item.main.temp}°C</div>
+                    </div>
+                  ))
+                }
+              </div>
             </div>
-          </div>
-        )}
+          )
+        }
       </div>
     );
   }
