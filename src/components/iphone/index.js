@@ -1,8 +1,6 @@
 import { h, render, Component} from 'preact';
 import style from './style';
-import style_iphone from '../button/style_iphone';
-import $, { event } from 'jquery';
-import Button from '../button';
+import $ from 'jquery';
 import clear from '../../assets/backgrounds/clear-iphone.jpg'
 import clouds from '../../assets/backgrounds/clouds-iphone.jpg'
 import rain from '../../assets/backgrounds/rain-iphone.jpg'
@@ -137,9 +135,32 @@ export default class WeatherApp extends Component {
     return backgroundImage;
   };
 
+  findMinMaxTemp = () => {
+    const { hourlyForecast } = this.state;
+  
+    if (!hourlyForecast) {
+      return { minTemp: null, maxTemp: null };
+    }
+  
+    let minTemp = Infinity;
+    let maxTemp = -Infinity;
+  
+    hourlyForecast.list.slice(0, 7).forEach((item) => {
+      if (item.main.temp_min < minTemp) {
+        minTemp = item.main.temp_min;
+      }
+      if (item.main.temp_max > maxTemp) {
+        maxTemp = item.main.temp_max;
+      }
+    });
+  
+    return { minTemp, maxTemp };
+  };
+
   render() {
     const { display, weather, airQuality, pollen, hourlyForecast } = this.state;
-  
+    const { minTemp, maxTemp } = this.findMinMaxTemp();
+
     return (
       <div class={style.container} style={{ backgroundImage: `url(${this.getBackgroundImage(weather)})` }}>
         {display && (
@@ -160,6 +181,9 @@ export default class WeatherApp extends Component {
           <div class={style.weatherInfo}>
             <div class={style.city}>{`${weather.name}, ${weather.sys.country}`}</div>
             <div class={style.temperature}>{weather.main.temp}°C</div>
+            <div class={style.minMaxTemps}>
+              <div>H: {maxTemp !== null ? `${maxTemp.toFixed(0)}°C` : 'N/A'} L: {minTemp !== null ? `${minTemp.toFixed(0)}°C` : 'N/A'}</div>
+            </div>
             <div class={style.conditions}>{weather.weather[0].description.charAt(0).toUpperCase() + weather.weather[0].description.slice(1)}</div>
           </div>
         )}
