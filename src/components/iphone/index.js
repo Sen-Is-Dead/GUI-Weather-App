@@ -266,7 +266,7 @@ export default class WeatherApp extends Component {
             <div class={style.hourlyForecast}>
               <div class={style.forecastItems}>
                 {
-                  hourlyForecast.list.slice(12).map((item, index) => (
+                  hourlyForecast.list.slice(0,12).map((item, index) => (
                     <div class={style.forecastItem} key={index}>
                       <div>
                         {new Date(item.dt * 1000).toLocaleTimeString([], { hour: '2-digit', hour12: false })}
