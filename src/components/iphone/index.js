@@ -141,6 +141,59 @@ export default class WeatherApp extends Component {
     return riskLevel === "High" ? high : low;
   };
 
+  //beginning of geolocation ZS
+  getLocation = () => {
+    if ('geolocation' in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          this.fetchWeatherDataByCoords(latitude, longitude);
+        },
+        (error) => {
+          console.log(`Geolocation error: ${error.message}`);
+        }
+      );
+    } else {
+      console.log('Geolocation is not supported by this browser.');
+    }
+  };
+
+  fetchWeatherDataByCoords = (lat, lon) => {
+    const weatherUrl = `http://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=metric&APPID=f790ee04115c5a19a219111693630060`;
+    const hourlyForecastUrl = `http://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&units=metric&APPID=f790ee04115c5a19a219111693630060`;
+
+	      $.ajax({
+        url: weatherUrl,
+        dataType: 'jsonp',
+        success: (response) => {
+          this.setState({ weather: response});
+          resolve(response);
+        },
+        error: (req, err) => {
+          console.log(`Weather API call failed: ${err}`);
+          reject(err);
+        }
+      });
+
+      $.ajax({
+        url: hourlyForecastUrl,
+        dataType: 'jsonp',
+        success: (response) => {
+          this.setState({ hourlyForecast: response });
+        },
+        error: (req, err) => {
+          console.log(`Hourly forecast API call failed: ${err}`);
+        }
+      });
+
+	      this.fetchAirQualityAndPollenData(lat, lon);
+      };
+
+  componentDidMount() {
+    this.getLocation();
+  }
+  //end of geo location ZS
+
   findMinMaxTemp = () => {
     const { hourlyForecast } = this.state;
   
