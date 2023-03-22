@@ -137,17 +137,17 @@ export default class WeatherApp extends Component {
     return backgroundImage;
   };
 
-  getPollenRiskImage = (riskLevel) => {
-    return riskLevel === "High" ? high : low;
+  getPollenRiskImage = (PollenRiskLevel) => {
+    return PollenRiskLevel === "High" ? high : low;
   };
 
   //beginning of geolocation ZS
   getLocation = () => {
-    if ('geolocation' in navigator) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const { latitude, longitude } = position.coords;
-          this.fetchWeatherDataByCoords(latitude, longitude);
+    if ('geolocation' in nav) {
+      nav.geolocation.getCurrentLocation(
+        (location) => {
+          const { lat, lon } = location.coords;
+          this.fetchWeatherDataByCoords(lat, lon);
         },
         (error) => {
           console.log(`Geolocation error: ${error.message}`);
@@ -189,7 +189,7 @@ export default class WeatherApp extends Component {
 	      this.fetchAirQualityAndPollenData(lat, lon);
       };
 
-  componentDidMount() {
+  compDidMount() {
     this.getLocation();
   }
   //end of geo location ZS
@@ -256,9 +256,9 @@ export default class WeatherApp extends Component {
         {this.state.searched && (
           <div class={style.pollenInfo}>
           <div class={style.infoTitle}>Pollen Count Data:</div>
-          <div class={style.infoSubtitle}>Tree Risk Level: {pollen !== null ? (pollen && pollen.data && pollen.data[0] ? <img class={style.pollenRiskImg} src={this.getPollenRiskImage(pollen.data[0].Risk.tree_pollen)} alt={pollen.data[0].Risk.tree_pollen} /> : 'N/A') : 'N/A'}</div>
-          <div class={style.infoSubtitle}>Grass Risk Level: {pollen !== null ? (pollen && pollen.data && pollen.data[0] ? <img class={style.pollenRiskImg} src={this.getPollenRiskImage(pollen.data[0].Risk.grass_pollen)} alt={pollen.data[0].Risk.grass_pollen} /> : 'N/A') : 'N/A'}</div>
-          <div class={style.infoSubtitle}>Weed Risk Level: {pollen !== null ? (pollen && pollen.data && pollen.data[0] ? <img class={style.pollenRiskImg} src={this.getPollenRiskImage(pollen.data[0].Risk.weed_pollen)} alt={pollen.data[0].Risk.weed_pollen} /> : 'N/A') : 'N/A'}</div>
+          <div class={style.infoSubtitle}>Tree Risk Level: {pollen !== null ? (pollen && pollen.data && pollen.data[0] ? <img class={style.pollenRiskImage} src={this.getPollenRiskImage(pollen.data[0].Risk.tree_pollen)} alt={pollen.data[0].Risk.TreePollen} /> : 'N/A') : 'N/A'}</div>
+          <div class={style.infoSubtitle}>Grass Risk Level: {pollen !== null ? (pollen && pollen.data && pollen.data[0] ? <img class={style.pollenRiskImage} src={this.getPollenRiskImage(pollen.data[0].Risk.grass_pollen)} alt={pollen.data[0].Risk.GrassPollen} /> : 'N/A') : 'N/A'}</div>
+          <div class={style.infoSubtitle}>Weed Risk Level: {pollen !== null ? (pollen && pollen.data && pollen.data[0] ? <img class={style.pollenRiskImage} src={this.getPollenRiskImage(pollen.data[0].Risk.weed_pollen)} alt={pollen.data[0].Risk.WeedPollen} /> : 'N/A') : 'N/A'}</div>
         </div>
         )}
         {
