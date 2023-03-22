@@ -1,4 +1,4 @@
-import { h, render, Component } from 'preact';
+import { h, render, Component} from 'preact';
 import style from './style';
 import $ from 'jquery';
 import clear from '../../assets/backgrounds/clear-iphone.jpg'
@@ -24,9 +24,10 @@ export default class WeatherApp extends Component {
       searched: false,
     };
   }
+
   handleLocationChange = (event) => {
     if (event.key === 'Enter') {
-      this.setState({ location: event.target.value });
+      this.setState({ location: event.target.value});
       this.fetchWeatherData(event.target.value)
         .then((response) => {
           if (response) {
@@ -34,7 +35,8 @@ export default class WeatherApp extends Component {
             this.fetchAirQualityAndPollenData(lat, lon);
           }
         });
-      this.setState({ location: '', searched: true });
+      this.setState({ location: '', searched: true});
+      event.target.blur();
     }
   };
 
@@ -47,7 +49,7 @@ export default class WeatherApp extends Component {
         url: weatherUrl,
         dataType: 'jsonp',
         success: (response) => {
-          this.setState({ weather: response });
+          this.setState({ weather: response});
           resolve(response);
         },
         error: (req, err) => {
@@ -78,11 +80,10 @@ export default class WeatherApp extends Component {
       url: ambeeApiUrl,
       headers: { 'x-api-key': ambeeApiKey },
       success: (response) => {
-        this.setState({ airQuality: response });
+        this.setState({ airQuality: response});
       },
       error: (req, err) => {
         console.log(`Air quality API call failed: ${err}`);
-        this.setState({ airQuality: false });
       }
     });
 
@@ -94,7 +95,6 @@ export default class WeatherApp extends Component {
       },
       error: (req, err) => {
         console.log(`Pollen API call failed: ${err}`);
-        this.setState({ pollen: false });
       }
     });
   };
@@ -137,17 +137,17 @@ export default class WeatherApp extends Component {
     return backgroundImage;
   };
 
-  getPollenRiskImage = (PollenRiskLevel) => {
-    return PollenRiskLevel === "High" ? high : low;
+  getPollenRiskImage = (riskLevel) => {
+    return riskLevel === "High" ? high : low;
   };
 
   //beginning of geolocation ZS
   getLocation = () => {
-    if ('geolocation' in nav) {
-      nav.geolocation.getCurrentLocation(
-        (location) => {
-          const { lat, lon } = location.coords;
-          this.fetchWeatherDataByCoords(lat, lon);
+    if ('geolocation' in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          this.fetchWeatherDataByCoords(latitude, longitude);
         },
         (error) => {
           console.log(`Geolocation error: ${error.message}`);
@@ -189,22 +189,22 @@ export default class WeatherApp extends Component {
 	      this.fetchAirQualityAndPollenData(lat, lon);
       };
 
-  compDidMount() {
+  componentDidMount() {
     this.getLocation();
   }
   //end of geo location ZS
 
   findMinMaxTemp = () => {
     const { hourlyForecast } = this.state;
-
+  
     if (!hourlyForecast) {
       return { minTemp: null, maxTemp: null };
     }
-
+  
     let minTemp = Infinity;
     let maxTemp = -Infinity;
-
-    hourlyForecast.list.slice(0, 7).forEach((item) => {
+  
+    hourlyForecast.list.slice(0, 12).forEach((item) => {
       if (item.main.temp_min < minTemp) {
         minTemp = item.main.temp_min;
       }
@@ -212,7 +212,7 @@ export default class WeatherApp extends Component {
         maxTemp = item.main.temp_max;
       }
     });
-
+  
     return { minTemp, maxTemp };
   };
 
@@ -239,45 +239,49 @@ export default class WeatherApp extends Component {
         {weather && (
           <div class={style.weatherInfo}>
             <div class={style.city}>{`${weather.name}, ${weather.sys.country}`}</div>
-            <div class={style.temperature}>{weather.main.temp}°C</div>
+            <div class={style.temperature}>{Math.round(weather.main.temp)}°C</div>
             <div class={style.minMaxTemps}>
               <div>H: {maxTemp !== null ? `${maxTemp.toFixed(0)}°C` : 'N/A'} L: {minTemp !== null ? `${minTemp.toFixed(0)}°C` : 'N/A'}</div>
             </div>
             <div class={style.conditions}>{weather.weather[0].description.charAt(0).toUpperCase() + weather.weather[0].description.slice(1)}</div>
           </div>
         )}
-        {this.state.searched && weather &&(
+        {this.state.searched && (
           <div class={style.airQualityInfo}>
-            <div class={style.infoTitle}>Air Quality Data:</div>
-            <div class={style.infoSubtitle}>Category: {airQuality !== null ? (airQuality.stations && airQuality.stations[0] ? airQuality.stations[0].aqiInfo.category : 'N/A') : 'N/A'}</div>
-            <div class={style.infoSubtitle}>AQI: {airQuality !== null ? (airQuality.stations && airQuality.stations[0] ? airQuality.stations[0].aqiInfo.concentration.toFixed(1) : 'N/A') : 'N/A'}</div>
-          </div>
+          <div class={style.infoTitle}>Air Quality Data:</div>
+          <div class={style.infoSubtitle}>Category: {airQuality !== null ? (airQuality.stations && airQuality.stations[0] ? airQuality.stations[0].aqiInfo.category : 'N/A') : 'N/A'}</div>
+          <div class={style.infoSubtitle}>AQI: {airQuality !== null ? (airQuality.stations && airQuality.stations[0] ? airQuality.stations[0].aqiInfo.concentration.toFixed(1) : 'N/A') : 'N/A'}</div>
+        </div>
         )}
-        {this.state.searched && weather &&(
+        {this.state.searched && (
           <div class={style.pollenInfo}>
-            <div class={style.infoTitle}>Pollen Count Data:</div>
-                      <div class={style.infoSubtitle}>Tree Risk Level: {pollen !== null ? (pollen && pollen.data && pollen.data[0] ? <img class={style.pollenRiskImg} src={this.getPollenRiskImage(pollen.data[0].Risk.tree_pollen)} alt={pollen.data[0].Risk.tree_pollen} /> : 'N/A') : 'N/A'}</div>
+          <div class={style.infoTitle}>Pollen Count Data:</div>
+          <div class={style.infoSubtitle}>Tree Risk Level: {pollen !== null ? (pollen && pollen.data && pollen.data[0] ? <img class={style.pollenRiskImg} src={this.getPollenRiskImage(pollen.data[0].Risk.tree_pollen)} alt={pollen.data[0].Risk.tree_pollen} /> : 'N/A') : 'N/A'}</div>
           <div class={style.infoSubtitle}>Grass Risk Level: {pollen !== null ? (pollen && pollen.data && pollen.data[0] ? <img class={style.pollenRiskImg} src={this.getPollenRiskImage(pollen.data[0].Risk.grass_pollen)} alt={pollen.data[0].Risk.grass_pollen} /> : 'N/A') : 'N/A'}</div>
           <div class={style.infoSubtitle}>Weed Risk Level: {pollen !== null ? (pollen && pollen.data && pollen.data[0] ? <img class={style.pollenRiskImg} src={this.getPollenRiskImage(pollen.data[0].Risk.weed_pollen)} alt={pollen.data[0].Risk.weed_pollen} /> : 'N/A') : 'N/A'}</div>
-          </div>
+        </div>
         )}
-        {hourlyForecast && (
-            <div class={style.hourlyForecast}>
-              <div class={style.forecastItems}>
-                {
-                  hourlyForecast.list.slice(12).map((item, index) => (
-                    <div class={style.forecastItem} key={index}>
-                      <div>
-                        {new Date(item.dt * 1000).toLocaleTimeString([], { hour: '2-digit', hour12: false })}
+        {
+          hourlyForecast && (
+            <div class={style.forecastWrapper}>
+              <div class={style.hourlyForecast}>
+                <div class={style.forecastItems}>
+                  {
+                    hourlyForecast.list.slice(0,12).map((item, index) => (
+                      <div class={style.forecastItem} key={index}>
+                        <div>
+                          {new Date(item.dt * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </div>
+                        <img src={`http://openweathermap.org/img/wn/${item.weather[0].icon}.png`} />
+                        <div>{Math.round(item.main.temp)}°C</div>
                       </div>
-                      <img src={`http://openweathermap.org/img/wn/${item.weather[0].icon}.png`} />
-                      <div>{Math.round(item.main.temp)}°C</div>
-                    </div>
-                  ))
-                }
+                    ))
+                  }
+                </div>
               </div>
             </div>
-          )}
+          )
+        }
       </div>
     );
   }
