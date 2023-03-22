@@ -7,6 +7,8 @@ import rain from '../../assets/backgrounds/rain-iphone.jpg'
 import snow from '../../assets/backgrounds/snow-iphone.jpg'
 import thunderstorm from '../../assets/backgrounds/thunderstorm-iphone.jpg'
 import mist from '../../assets/backgrounds/mist-iphone.jpg'
+import low from '../../assets/icons/LowLevel.png' 
+import high from '../../assets/icons/HighLevel.png'
 
 
 export default class WeatherApp extends Component {
@@ -135,6 +137,10 @@ export default class WeatherApp extends Component {
     return backgroundImage;
   };
 
+  getPollenRiskImage = (riskLevel) => {
+    return riskLevel === "High" ? high : low;
+  };
+
   findMinMaxTemp = () => {
     const { hourlyForecast } = this.state;
   
@@ -197,9 +203,9 @@ export default class WeatherApp extends Component {
         {this.state.searched && (
           <div class={style.pollenInfo}>
           <div class={style.infoTitle}>Pollen Count Data:</div>
-          <div class={style.infoSubtitle}>Tree Risk Level: {pollen !== null ? (pollen && pollen.data && pollen.data[0] ? pollen.data[0].Risk.tree_pollen : 'N/A') : 'N/A'}</div>
-          <div class={style.infoSubtitle}>Grass Risk Level: {pollen !== null ? (pollen && pollen.data && pollen.data[0] ? pollen.data[0].Risk.grass_pollen : 'N/A') : 'N/A'}</div>
-          <div class={style.infoSubtitle}>Weed Risk Level: {pollen !== null ? (pollen && pollen.data && pollen.data[0] ? pollen.data[0].Risk.weed_pollen : 'N/A') : 'N/A'}</div>
+          <div class={style.infoSubtitle}>Tree Risk Level: {pollen !== null ? (pollen && pollen.data && pollen.data[0] ? <img class={style.pollenRiskImg} src={this.getPollenRiskImage(pollen.data[0].Risk.tree_pollen)} alt={pollen.data[0].Risk.tree_pollen} /> : 'N/A') : 'N/A'}</div>
+          <div class={style.infoSubtitle}>Grass Risk Level: {pollen !== null ? (pollen && pollen.data && pollen.data[0] ? <img class={style.pollenRiskImg} src={this.getPollenRiskImage(pollen.data[0].Risk.grass_pollen)} alt={pollen.data[0].Risk.grass_pollen} /> : 'N/A') : 'N/A'}</div>
+          <div class={style.infoSubtitle}>Weed Risk Level: {pollen !== null ? (pollen && pollen.data && pollen.data[0] ? <img class={style.pollenRiskImg} src={this.getPollenRiskImage(pollen.data[0].Risk.weed_pollen)} alt={pollen.data[0].Risk.weed_pollen} /> : 'N/A') : 'N/A'}</div>
         </div>
         )}
         {
