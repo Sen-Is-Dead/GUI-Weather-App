@@ -141,13 +141,17 @@ export default class WeatherApp extends Component {
     return PollenRiskLevel === "High" ? high : low;
   };
 
-  //beginning of geolocation ZS
   getLocation = () => {
-    if ('geolocation' in nav) {
-      nav.geolocation.getCurrentLocation(
-        (location) => {
-          const { lat, lon } = location.coords;
-          this.fetchWeatherDataByCoords(lat, lon);
+    if ('geolocation' in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude: lat, longitude: lon } = position.coords;
+          this.fetchWeatherDataByCoords(lat, lon)
+            .then((response) => {
+              if (response) {
+                this.fetchAirQualityAndPollenData(lat, lon);
+              }
+            });
         },
         (error) => {
           console.log(`Geolocation error: ${error.message}`);
@@ -157,42 +161,40 @@ export default class WeatherApp extends Component {
       console.log('Geolocation is not supported by this browser.');
     }
   };
+  
 
   fetchWeatherDataByCoords = (lat, lon) => {
-    const weatherUrl = `http://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=metric&APPID=f790ee04115c5a19a219111693630060`;
-    const hourlyForecastUrl = `http://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&units=metric&APPID=f790ee04115c5a19a219111693630060`;
-
-	      $.ajax({
-        url: weatherUrl,
-        dataType: 'jsonp',
-        success: (response) => {
-          this.setState({ weather: response});
-          resolve(response);
-        },
-        error: (req, err) => {
-          console.log(`Weather API call failed: ${err}`);
-          reject(err);
-        }
-      });
-
-      $.ajax({
-        url: hourlyForecastUrl,
-        dataType: 'jsonp',
-        success: (response) => {
-          this.setState({ hourlyForecast: response });
-        },
-        error: (req, err) => {
-          console.log(`Hourly forecast API call failed: ${err}`);
-        }
-      });
-
-	      this.fetchAirQualityAndPollenData(lat, lon);
-      };
-
+    const weatherUrl = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=metric&APPID=f790ee04115c5a19a219111693630060`;
+    const hourlyForecastUrl = `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&units=metric&APPID=f790ee04115c5a19a219111693630060`;
+  
+    $.ajax({
+      url: weatherUrl,
+      dataType: 'jsonp',
+      success: (response) => {
+        this.setState({ weather: response, searched: true });
+      },
+      error: (req, err) => {
+        console.log(`Weather API call failed: ${err}`);
+      }
+    });
+  
+    $.ajax({
+      url: hourlyForecastUrl,
+      dataType: 'jsonp',
+      success: (response) => {
+        this.setState({ hourlyForecast: response });
+      },
+      error: (req, err) => {
+        console.log(`Hourly forecast API call failed: ${err}`);
+      }
+    });
+  
+    this.fetchAirQualityAndPollenData(lat, lon);
+  };
+  
   compDidMount() {
     this.getLocation();
   }
-  //end of geo location ZS
 
   findMinMaxTemp = () => {
     const { hourlyForecast } = this.state;
@@ -234,7 +236,9 @@ export default class WeatherApp extends Component {
               onKeyPress={this.handleLocationChange}
             />
             <label for="search-box"><img src="../../assets/icons/search.png" class={style.searchIcon} /></label>
+            <button class={style.locationButton} onClick={this.getLocation}>Use current location</button>
           </div>
+          
         )}
         {weather && (
           <div class={style.weatherInfo}>
