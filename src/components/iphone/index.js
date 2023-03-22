@@ -256,9 +256,9 @@ export default class WeatherApp extends Component {
         {this.state.searched && (
           <div class={style.pollenInfo}>
           <div class={style.infoTitle}>Pollen Count Data:</div>
-          <div class={style.infoSubtitle}>Tree Risk Level: {pollen !== null ? (pollen && pollen.data && pollen.data[0] ? <img class={style.pollenRiskImage} src={this.getPollenRiskImage(pollen.data[0].Risk.tree_pollen)} alt={pollen.data[0].Risk.TreePollen} /> : 'N/A') : 'N/A'}</div>
-          <div class={style.infoSubtitle}>Grass Risk Level: {pollen !== null ? (pollen && pollen.data && pollen.data[0] ? <img class={style.pollenRiskImage} src={this.getPollenRiskImage(pollen.data[0].Risk.grass_pollen)} alt={pollen.data[0].Risk.GrassPollen} /> : 'N/A') : 'N/A'}</div>
-          <div class={style.infoSubtitle}>Weed Risk Level: {pollen !== null ? (pollen && pollen.data && pollen.data[0] ? <img class={style.pollenRiskImage} src={this.getPollenRiskImage(pollen.data[0].Risk.weed_pollen)} alt={pollen.data[0].Risk.WeedPollen} /> : 'N/A') : 'N/A'}</div>
+          <div class={style.infoSubtitle}>Tree Risk Level: {pollen !== null ? (pollen && pollen.data && pollen.data[0] ? <img class={style.pollenRiskImage} src={this.getPollenRiskImage(pollen.data[0].Risk.tree_pollen)} alt={pollen.data[0].Risk.tree_pollen} /> : 'N/A') : 'N/A'}</div>
+          <div class={style.infoSubtitle}>Grass Risk Level: {pollen !== null ? (pollen && pollen.data && pollen.data[0] ? <img class={style.pollenRiskImage} src={this.getPollenRiskImage(pollen.data[0].Risk.grass_pollen)} alt={pollen.data[0].Risk.grass_pollen} /> : 'N/A') : 'N/A'}</div>
+          <div class={style.infoSubtitle}>Weed Risk Level: {pollen !== null ? (pollen && pollen.data && pollen.data[0] ? <img class={style.pollenRiskImage} src={this.getPollenRiskImage(pollen.data[0].Risk.weed_pollen)} alt={pollen.data[0].Risk.weed_pollen} /> : 'N/A') : 'N/A'}</div>
         </div>
         )}
         {
