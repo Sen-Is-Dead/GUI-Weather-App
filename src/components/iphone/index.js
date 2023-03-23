@@ -35,6 +35,7 @@ export default class WeatherApp extends Component {
           }
         });
       this.setState({ location: '', searched: true });
+      event.target.blur();
     }
   };
 
