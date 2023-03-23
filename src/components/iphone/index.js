@@ -161,7 +161,6 @@ export default class WeatherApp extends Component {
       console.log('Geolocation is not supported by this browser.');
     }
   };
-  
 
   fetchWeatherDataByCoords = (lat, lon) => {
     const weatherUrl = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=metric&APPID=f790ee04115c5a19a219111693630060`;
@@ -206,7 +205,7 @@ export default class WeatherApp extends Component {
     let minTemp = Infinity;
     let maxTemp = -Infinity;
 
-    hourlyForecast.list.slice(0, 7).forEach((item) => {
+    hourlyForecast.list.forEach((item) => {
       if (item.main.temp_min < minTemp) {
         minTemp = item.main.temp_min;
       }
@@ -225,7 +224,8 @@ export default class WeatherApp extends Component {
     return (
       <div class={style.container} style={{ backgroundImage: `url(${this.getBackgroundImage(weather)})` }}>
         {display && (
-          <div class={style.searchWrapper}>
+          <div class={style.topWrapper}>
+            <label for="search-box"><img src="../../assets/icons/search.png" class={style.searchIcon} /></label>
             <input
               id="search-box"
               class={style.search}
@@ -235,15 +235,14 @@ export default class WeatherApp extends Component {
               onChange={this.handleLocationChange}
               onKeyPress={this.handleLocationChange}
             />
-            <label for="search-box"><img src="../../assets/icons/search.png" class={style.searchIcon} /></label>
-            <button class={style.locationButton} onClick={this.getLocation}>Use current location</button>
+            <button id="location-box" class={style.locationButton} onClick={this.getLocation}/>
+            <label for="location-box"><img src="../../assets/icons/location.png" class={style.locationIcon}/></label>
           </div>
-          
         )}
         {weather && (
           <div class={style.weatherInfo}>
             <div class={style.city}>{`${weather.name}, ${weather.sys.country}`}</div>
-            <div class={style.temperature}>{weather.main.temp}°C</div>
+            <div class={style.temperature}>{Math.round(weather.main.temp)}°C</div>
             <div class={style.minMaxTemps}>
               <div>H: {maxTemp !== null ? `${maxTemp.toFixed(0)}°C` : 'N/A'} L: {minTemp !== null ? `${minTemp.toFixed(0)}°C` : 'N/A'}</div>
             </div>
@@ -270,7 +269,7 @@ export default class WeatherApp extends Component {
             <div class={style.hourlyForecast}>
               <div class={style.forecastItems}>
                 {
-                  hourlyForecast.list.slice(12).map((item, index) => (
+                  hourlyForecast.list.slice(0,12).map((item, index) => (
                     <div class={style.forecastItem} key={index}>
                       <div>
                         {new Date(item.dt * 1000).toLocaleTimeString([], { hour: '2-digit', hour12: false })}
