@@ -17,7 +17,7 @@ npm -v
 
 ```sh
 git clone --depth 1 https://github.com/Sen-Is-Dead/GUI-Weather-App GUI-Weather-App
-cd weather-app
+cd GUI-Weather-App
 ```
 
 **2. Make it your own :**
@@ -30,7 +30,7 @@ rm -rf .git && git init && npm init
 
 **2a. Make it your own (Windows):**
 
-If you are using Windowsyou can run the three necessary comand using Powershell. You might need elevated privileges.
+If you are using Windows you can run the three necessary comand using Powershell. You might need elevated privileges.
 
 ```sh
 rm -r -fo .git
