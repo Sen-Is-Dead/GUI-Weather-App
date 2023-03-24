@@ -5,29 +5,40 @@ import { h, Component } from 'preact';
 import Iphone from './iphone';
 import Ipad from './ipad';
 
-// Main App component
 export default class App extends Component {
+//var App = React.createClass({
 
-// Initialize state and bind methods
-	constructor(props) {
-	  super(props);
-	  this.state = {
-		weatherData: null
-	  };
-	  this.handleWeatherData = this.handleWeatherData.bind(this);
+	// once the components are loaded, checks if the url bar has a path with "ipad" in it, if so sets state of tablet to be true
+	componentDidMount() {
+		const urlBar = window.location.href;
+		if(urlBar.includes("ipad")) {
+			this.setState({
+				"isTablet": true
+			});
+		} else {
+			this.setState({
+				"isTablet": false
+			});
+		}
 	}
 
-// Method to handle weather data received from child components
-	handleWeatherData(data) {
-	  this.setState({ weatherData: data });
+	/*
+		A render method to display the required Component on screen (iPhone or iPad) : selected by checking component's isTablet state
+	*/
+	render(){
+		if(this.state.isTablet){
+			return (
+				<div id="app">
+					<Ipad/ >
+				</div>   				
+			);
+		} 
+		else {
+			return (
+				<div id="app">
+					<Iphone/ >
+				</div>
+			);
+		}
 	}
-
-// Render method for the component
-	render() {
-		return (
-		  <div id="app">
-			<Iphone onWeatherData={this.handleWeatherData} />
-		  </div>
-		);
-	  }
 }
