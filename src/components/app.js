@@ -12,7 +12,6 @@ export default class App extends Component {
 	constructor(props) {
 	  super(props);
 	  this.state = {
-		isTablet: false,
 		weatherData: null
 	  };
 	  this.handleWeatherData = this.handleWeatherData.bind(this);
@@ -25,23 +24,11 @@ export default class App extends Component {
 
 // Render method for the component
 	render() {
-
-// Check if the device is a tablet or not
-	  if (this.state.isTablet) {
-// Render the Ipad component
-		  return (
-		  <div id="app">
-			<Ipad />
-		  </div>
-		);
-	  } else {
-// Render the Ipad component
 		return (
 		  <div id="app">
 			<Iphone onWeatherData={this.handleWeatherData} />
 		  </div>
 		);
 	  }
-	}
-  }
+}
 
